@@ -1,4 +1,4 @@
-import "./styles/style.css";
+import "./styles/critical.css";
 
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -109,9 +109,9 @@ function loadModel(model, scene, section, i) {
     // camera.position.z = 2;
     let camera = gltf.cameras[0];
     if (!camera) {
-      camera = new THREE.PerspectiveCamera(100, 1, 0.5, 100);
-      // camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200);
-      camera.position.z = 2;
+      // camera = new THREE.PerspectiveCamera(100, 1, 0.5, 100);
+      // // camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200);
+      // camera.position.z = 2;
     }
     const cameraGroup = new THREE.Group();
     scene.add(cameraGroup);
@@ -360,8 +360,11 @@ function render() {
       const parallaxY = -cursor.y * 0.8;
 
       cameraGroup.rotation.y += (parallaxX - cameraGroup.rotation.y) * 0.1;
-      cameraGroup.rotation.x += (parallaxY - cameraGroup.rotation.x) * 0.1;
-      // cameraGroup.rotation.z += (parallaxY - cameraGroup.rotation.z) * 0.1;
+      if (element.dataset.mouseZ) {
+        cameraGroup.rotation.z += (parallaxY - cameraGroup.rotation.z) * 0.1;
+      } else {
+        cameraGroup.rotation.x += (parallaxY - cameraGroup.rotation.x) * 0.1;
+      }
       // }
 
       //camera.aspect = width / height; // not changing in this example
@@ -374,7 +377,7 @@ function render() {
   }
 }
 
-// window.addEventListener("DOMContentLoaded", () => {
-// });
-init();
-animate();
+window.addEventListener("DOMContentLoaded", () => {
+  init();
+  animate();
+});
