@@ -3,16 +3,28 @@ import "./styles/critical.css";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import Player from "@vimeo/player";
 
 import * as dat from "dat.gui";
 
 const sections = document.querySelectorAll("[data-three-section]");
 
+const iframe = document.getElementById("hero-vimeo");
+const player = new Player(iframe);
+
 let canvas, renderer;
 
 const scenes = [];
+const THREE_PATH = `https://unpkg.com/three@0.${THREE.REVISION}.x`;
 let scenesLoaded = false;
+const dracoLoader = new DRACOLoader().setDecoderPath(
+  `${THREE_PATH}/examples/jsm/libs/draco/gltf/`
+);
+dracoLoader.setDecoderPath("/src/public/draco/");
+
 const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
 const cursor = {
   x: 0,
   y: 0,
@@ -42,7 +54,6 @@ window.addEventListener("touchmove", onTouchMove, { passive: true });
 function loadModel(model, scene, section, i) {
   gltfLoader.load(model, (gltf) => {
     // gltf.scene.position.y = -0.25;
-    // console.log(gltf.scene);
     const valuestoTweak = {
       scale: 0.8,
       loopAnimation: false,
@@ -55,6 +66,7 @@ function loadModel(model, scene, section, i) {
 
     const animation = gltf.animations[0];
     const mixer = new THREE.AnimationMixer(shape);
+
     const action = mixer.clipAction(animation);
     action.setLoop(THREE.LoopOnce);
     action.clampWhenFinished = true;
@@ -62,9 +74,61 @@ function loadModel(model, scene, section, i) {
     scene.userData.mixer = mixer;
     scene.userData.action = action;
 
-    mixer.addEventListener("finished", () => {
+    mixer?.addEventListener("finished", () => {
       scene.userData.animationEnded = true;
     });
+
+    const isReverse = section.getAttribute("data-reverse");
+
+    if (isReverse) {
+      section.addEventListener("click", () => {
+        const delay = section.getAttribute("data-reverse-delay") || 0;
+        action.paused = false;
+        action.timeScale = -1;
+        action.setLoop(THREE.LoopOnce);
+        action.play();
+
+        // replay animation when it ends
+        setTimeout(() => {
+          action.paused = false;
+          action.timeScale = 1;
+          action.setLoop(THREE.LoopOnce);
+          action.play();
+        }, (animation.duration - Number(delay)) * 1000);
+      });
+    }
+
+    const isSwitch = section.getAttribute("data-video-switch");
+
+    if (isSwitch) {
+      let isPlaying = false;
+      player
+        .ready()
+        .then(() => {
+          // player.getDuration().then((data) => console.log(data));
+
+          // get current time in seconds
+          player.on("timeupdate", function (data) {
+            if (data.seconds > 2.8) {
+              if (!isPlaying) {
+                iframe.style.opacity = 0;
+                shape.traverse((child) => {
+                  if (child instanceof THREE.Mesh) {
+                    child.material.transparent = false;
+                    child.material.opacity = 1;
+                  }
+                });
+                action.play();
+
+                isPlaying = true;
+              }
+            }
+
+            // console.log(data);
+          });
+        })
+        .catch((err) => console.log(err));
+    }
 
     // if (i === 1) {
     //   action.setLoop(THREE.LoopRepeat);
@@ -109,9 +173,8 @@ function loadModel(model, scene, section, i) {
     // camera.position.z = 2;
     let camera = gltf.cameras[0];
     if (!camera) {
-      // camera = new THREE.PerspectiveCamera(100, 1, 0.5, 100);
-      // // camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200);
-      // camera.position.z = 2;
+      camera = new THREE.PerspectiveCamera(100, 1, 0.5, 100);
+      camera.position.z = 40;
     }
     const cameraGroup = new THREE.Group();
     scene.add(cameraGroup);
@@ -211,6 +274,11 @@ function loadModel(model, scene, section, i) {
         } else {
           child.material.color = new THREE.Color(0xffffff);
         }
+
+        if (isSwitch) {
+          child.material.transparent = true;
+          child.material.opacity = 0;
+        }
       }
     });
 
@@ -229,6 +297,18 @@ function init() {
   canvas.id = "webgl";
   document.body.appendChild(canvas);
 
+  renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true,
+  });
+  // renderer.setClearColor(0xffffff, 1);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  if (window.location.pathname === "/build") {
+    canvas.style.zIndex = 0;
+  }
+
   // const content = document.getElementById("content");
   sections.forEach((section, i) => {
     const scene = new THREE.Scene();
@@ -245,14 +325,6 @@ function init() {
   // for (let i = 0; i < 10; i++) {
 
   // }
-
-  renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true,
-    alpha: true,
-  });
-  // renderer.setClearColor(0xffffff, 1);
-  renderer.setPixelRatio(window.devicePixelRatio);
 
   THREE.DefaultLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
     if (itemsLoaded === itemsTotal) {
@@ -291,7 +363,18 @@ function playAnimation() {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          scene.userData.action.play();
+          canvas.style.opacity = 1;
+
+          if (window.location.pathname === "/jobs") {
+            canvas.style.opacity = 0.65;
+          }
+
+          const isSwitch =
+            scene.userData.element.getAttribute("data-video-switch");
+
+          if (!isSwitch) {
+            scene.userData.action.play();
+          }
         } else {
           // scene.userData.action.stop();
         }
@@ -328,7 +411,7 @@ function render() {
       // draw the scene
       const element = scene.userData.element;
 
-      scene.userData.mixer.update(0.015);
+      scene.userData.mixer?.update(0.015);
 
       // get its position relative to the page's viewport
       const rect = element.getBoundingClientRect();
@@ -359,11 +442,11 @@ function render() {
       const parallaxX = -cursor.x * 0.8;
       const parallaxY = -cursor.y * 0.8;
 
-      cameraGroup.rotation.y += (parallaxX - cameraGroup.rotation.y) * 0.1;
+      cameraGroup.rotation.y += (parallaxX - cameraGroup.rotation.y) * 0.05;
       if (element.dataset.mouseZ) {
-        cameraGroup.rotation.z += (parallaxY - cameraGroup.rotation.z) * 0.1;
+        cameraGroup.rotation.z += (parallaxY - cameraGroup.rotation.z) * 0.05;
       } else {
-        cameraGroup.rotation.x += (parallaxY - cameraGroup.rotation.x) * 0.1;
+        cameraGroup.rotation.x += (parallaxY - cameraGroup.rotation.x) * 0.05;
       }
       // }
 

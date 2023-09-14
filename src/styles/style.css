@@ -1,7 +1,11 @@
+canvas#webgl {
+  opacity: 1 !important;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background: #fff;
+  background: black;
   margin-top: 500px;
 }
 
