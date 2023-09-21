@@ -10,9 +10,6 @@ import * as dat from "dat.gui";
 
 const sections = document.querySelectorAll("[data-three-section]");
 
-const iframe = document.getElementById("hero-vimeo");
-const player = new Player(iframe);
-
 let canvas, renderer;
 
 const scenes = [];
@@ -101,7 +98,13 @@ function loadModel(model, scene, section, i) {
     const isSwitch = section.getAttribute("data-video-switch");
 
     if (isSwitch) {
+      const iframe = document.getElementById("hero-vimeo");
+      const player = new Player(iframe);
       let isPlaying = false;
+      shape.children.forEach((child) => {
+        child.position.y = 0;
+      });
+      window.removeEventListener("mousemove", onTouchMove, { passive: true });
       player
         .ready()
         .then(() => {
@@ -111,6 +114,7 @@ function loadModel(model, scene, section, i) {
           player.on("timeupdate", function (data) {
             if (data.seconds > 2.8) {
               if (!isPlaying) {
+                player.pause();
                 iframe.style.opacity = 0;
                 shape.traverse((child) => {
                   if (child instanceof THREE.Mesh) {
@@ -118,7 +122,14 @@ function loadModel(model, scene, section, i) {
                     child.material.opacity = 1;
                   }
                 });
+                action.paused = false;
                 action.play();
+
+                setTimeout(() => {
+                  window.addEventListener("mousemove", onTouchMove, {
+                    passive: true,
+                  });
+                }, 100);
 
                 isPlaying = true;
               }
@@ -411,7 +422,13 @@ function render() {
       // draw the scene
       const element = scene.userData.element;
 
-      scene.userData.mixer?.update(0.015);
+      const isSwitch = section.getAttribute("data-video-switch");
+
+      if (isSwitch) {
+        scene.userData.mixer?.update(0.008);
+      } else {
+        scene.userData.mixer?.update(0.015);
+      }
 
       // get its position relative to the page's viewport
       const rect = element.getBoundingClientRect();
@@ -438,7 +455,6 @@ function render() {
       const camera = scene.userData.camera;
       const cameraGroup = scene.userData.cameraGroup;
 
-      // if (scene.userData.animationEnded) {
       const parallaxX = -cursor.x * 0.8;
       const parallaxY = -cursor.y * 0.8;
 
