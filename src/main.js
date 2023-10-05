@@ -59,7 +59,6 @@ function loadModel(model, scene, section, i) {
     const { scale } = valuestoTweak;
     const shape = gltf.scene;
     shape.scale.set(scale, scale, scale);
-    // shape.rotation.y = 0.58;
 
     const animation = gltf.animations[0];
     const mixer = new THREE.AnimationMixer(shape);
@@ -98,13 +97,11 @@ function loadModel(model, scene, section, i) {
     const isSwitch = section.getAttribute("data-video-switch");
 
     if (isSwitch) {
-      const iframe = document.getElementById("hero-vimeo");
+      window.removeEventListener("mousemove", onTouchMove, { passive: true });
+      const iframe = section.closest(".shape_wrapper").querySelector("iframe");
+      iframe.style.transition = "opacity 1s";
       const player = new Player(iframe);
       let isPlaying = false;
-      shape.children.forEach((child) => {
-        child.position.y = 0;
-      });
-      window.removeEventListener("mousemove", onTouchMove, { passive: true });
       player
         .ready()
         .then(() => {
@@ -129,7 +126,7 @@ function loadModel(model, scene, section, i) {
                   window.addEventListener("mousemove", onTouchMove, {
                     passive: true,
                   });
-                }, 100);
+                }, 4000);
 
                 isPlaying = true;
               }
@@ -139,6 +136,13 @@ function loadModel(model, scene, section, i) {
           });
         })
         .catch((err) => console.log(err));
+    } else {
+      const video = section.parentNode.parentNode.querySelector(".bg-video");
+      if (video) {
+        video.style.opacity = 0;
+        video.style.pointerEvents = "none";
+        video.style.visibility = "hidden";
+      }
     }
 
     // if (i === 1) {
@@ -184,8 +188,8 @@ function loadModel(model, scene, section, i) {
     // camera.position.z = 2;
     let camera = gltf.cameras[0];
     if (!camera) {
-      camera = new THREE.PerspectiveCamera(100, 1, 0.5, 100);
-      camera.position.z = 40;
+      camera = new THREE.PerspectiveCamera(20, 1, 0.1, 100);
+      camera.position.set(0, 0, 10);
     }
     const cameraGroup = new THREE.Group();
     scene.add(cameraGroup);
@@ -422,10 +426,10 @@ function render() {
       // draw the scene
       const element = scene.userData.element;
 
-      const isSwitch = section.getAttribute("data-video-switch");
+      const speed = element.getAttribute("data-speed");
 
-      if (isSwitch) {
-        scene.userData.mixer?.update(0.008);
+      if (speed) {
+        scene.userData.mixer?.update(Number(speed));
       } else {
         scene.userData.mixer?.update(0.015);
       }
