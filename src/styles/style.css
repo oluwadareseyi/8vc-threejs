@@ -1,5 +1,6 @@
+[data-three-section],
 canvas#webgl {
-  opacity: 1 !important;
+  position: static !important;
 }
 
 body {
