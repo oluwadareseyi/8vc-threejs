@@ -12,21 +12,21 @@ export default defineConfig({
       protocol: "ws",
     },
   },
-  build: {
-    minify: true,
-    manifest: true,
-    rollupOptions: {
-      input: "./src/main.js",
-      output: {
-        format: "umd",
-        entryFileNames: "main.js",
-        esModule: false,
-        compact: true,
-        globals: {
-          jquery: "$",
-        },
-      },
-      external: ["jquery"],
-    },
-  },
+  // build: {
+  //   minify: true,
+  //   manifest: true,
+  //   rollupOptions: {
+  //     input: "./src/main.js",
+  //     output: {
+  //       format: "umd",
+  //       entryFileNames: "main.js",
+  //       esModule: false,
+  //       compact: true,
+  //       globals: {
+  //         jquery: "$",
+  //       },
+  //     },
+  //     external: ["jquery"],
+  //   },
+  // },
 });
