@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import AutoBind from "./bind";
 import Player from "@vimeo/player";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+const THREE_PATH = `https://unpkg.com/three@0.${THREE.REVISION}.x`;
 
 export default class Canvas {
   constructor(element, canvas) {
@@ -14,6 +16,10 @@ export default class Canvas {
     this.element = element;
     this.sizes = this.elementSize;
     this.sceneLoaded = false;
+
+    this.dracoLoader = new DRACOLoader().setDecoderPath(
+      `${THREE_PATH}/examples/jsm/libs/draco/gltf/`
+    );
 
     this.cursor = {
       x: 0,
@@ -43,6 +49,7 @@ export default class Canvas {
 
   loadAssets() {
     const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(this.dracoLoader);
     const model = this.element.getAttribute("data-three-section").split(",");
     const section = this.element;
 
@@ -56,11 +63,11 @@ export default class Canvas {
       this.action = this.mixer.clipAction(this.animation);
       this.camera = gltf.cameras[0];
 
-      if (!this.camera) {
-        console.log(gltf);
-        this.camera = new THREE.PerspectiveCamera(20, 1, 0.1, 100);
-        this.camera.position.set(0, 1.5, 10);
-      }
+      // if (!this.camera) {
+      //   console.log(gltf);
+      //   this.camera = new THREE.PerspectiveCamera(20, 1, 0.1, 100);
+      //   this.camera.position.set(0, 1.5, 10);
+      // }
 
       this.cameraGroup = new THREE.Group();
       this.scene.add(this.cameraGroup);
