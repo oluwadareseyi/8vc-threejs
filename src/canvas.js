@@ -102,51 +102,95 @@ export default class Canvas {
       }
 
       if (isSwitch) {
-        const iframe = section
+        const lottieEl = section
           .closest(".shape_wrapper")
-          .querySelector("iframe");
-        iframe.style.transition = "opacity 1s";
-        const player = new Player(iframe);
+          .querySelector(".hero-lottie-inner");
+
+        const lottie = Webflow.require("lottie").lottie;
+
+        lottieEl.style.transition = "opacity 1s";
+        // const player = new Player(iframe);
         let isPlaying = false;
 
         this.shape.children.forEach((item) => {
           item.position.y = item.position.y + 0.39;
         });
 
-        player
-          .ready()
-          .then(() => {
-            // player.getDuration().then((data) => console.log(data));
+        // set interval to check if lottie has finished playing then switch models
+        const animations = lottie.getRegisteredAnimations();
 
-            // get current time in seconds
-            player.on("timeupdate", (data) => {
-              if (data.seconds > 2.8) {
-                if (!isPlaying) {
-                  player.pause();
-                  iframe.style.opacity = 0;
+        const heroLottie = animations.find((item) => {
+          return (item.wrapper = lottieEl);
+        });
 
-                  this.shape.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                      child.material.transparent = false;
-                      child.material.opacity = 1;
-                    }
-                  });
+        const duration = heroLottie.getDuration() + 0.25;
+        heroLottie.play();
 
-                  this.action.paused = false;
-                  this.action.play();
+        heroLottie.addEventListener("complete", () => {
+          setTimeout(() => {
+            // console.log("switch models");
+            switchModels();
+          }, duration * 1000);
+        });
 
-                  setTimeout(() => {
-                    this.addEventListeners();
-                  }, 4000);
+        const switchModels = () => {
+          lottieEl.style.opacity = 0;
 
-                  isPlaying = true;
-                }
-              }
+          this.shape.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.material.transparent = false;
+              child.material.opacity = 1;
+            }
+          });
 
-              // console.log(data);
-            });
-          })
-          .catch((err) => console.log(err));
+          this.action.paused = false;
+          this.action.play();
+
+          setTimeout(() => {
+            this.addEventListeners();
+          }, 4000);
+
+          isPlaying = true;
+        };
+
+        // setTimeout(() => {
+        //   switchModels();
+        // }, 4500);
+
+        // player
+        //   .ready()
+        //   .then(() => {
+        //     // player.getDuration().then((data) => console.log(data));
+
+        //     // get current time in seconds
+        //     player.on("timeupdate", (data) => {
+        //       if (data.seconds > 2.8) {
+        //         if (!isPlaying) {
+        //           player.pause();
+        //           iframe.style.opacity = 0;
+
+        //           this.shape.traverse((child) => {
+        //             if (child instanceof THREE.Mesh) {
+        //               child.material.transparent = false;
+        //               child.material.opacity = 1;
+        //             }
+        //           });
+
+        //           this.action.paused = false;
+        //           this.action.play();
+
+        //           setTimeout(() => {
+        //             this.addEventListeners();
+        //           }, 4000);
+
+        //           isPlaying = true;
+        //         }
+        //       }
+
+        //       // console.log(data);
+        //     });
+        //   })
+        //   .catch((err) => console.log(err));
       } else {
         this.addEventListeners();
 
