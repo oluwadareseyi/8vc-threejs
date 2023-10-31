@@ -123,14 +123,15 @@ export default class Canvas {
           return (item.wrapper = lottieEl);
         });
 
-        const duration = heroLottie.getDuration() + 0.25;
+        // const duration = heroLottie.getDuration() + 0.25;
+        const delay = Number(lottieEl.getAttribute("data-delay")) || 0;
         heroLottie.play();
 
         heroLottie.addEventListener("complete", () => {
           setTimeout(() => {
             // console.log("switch models");
             switchModels();
-          }, duration * 1000);
+          }, delay * 1000);
         });
 
         const switchModels = () => {
