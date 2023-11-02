@@ -14,5 +14,5 @@
 <!-- Lottie -->
 <script
   type="text/javascript"
-  src="https://uploads-ssl.webflow.com/649c36de625a16ebb7e23a94/653cf069a20cd20e8fd281a6_main.js.txt"
+  src="https://uploads-ssl.webflow.com/653fa8347a5ce0ccd8de0d88/6540ff9f9daa9796d9a29cb2_main-lottie.js.txt"
 ></script>
