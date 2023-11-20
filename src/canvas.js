@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import AutoBind from "./bind";
-import Player from "@vimeo/player";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 const THREE_PATH = `https://unpkg.com/three@0.${THREE.REVISION}.x`;
 
@@ -58,9 +57,11 @@ export default class Canvas {
 
       gltf.scene.scale.set(0.8, 0.8, 0.8);
       this.shape = gltf.scene;
+      const shape = this.shape;
       this.animation = gltf.animations[0];
       this.mixer = new THREE.AnimationMixer(this.shape);
       this.action = this.mixer.clipAction(this.animation);
+      const action = this.action;
       this.camera = gltf.cameras[0];
 
       // if (!this.camera) {
@@ -77,7 +78,6 @@ export default class Canvas {
       this.action.clampWhenFinished = true;
       this.action.enable = true;
       this.playAnimation();
-      const action = this.action;
 
       const emmisiveColor = this.element.getAttribute("data-emissive");
       const isSwitch = this.element.getAttribute("data-video-switch");
@@ -101,52 +101,54 @@ export default class Canvas {
         });
       }
 
-      if (isSwitch) {
-        const iframe = section
-          .closest(".shape_wrapper")
-          .querySelector("iframe");
-        iframe.style.transition = "opacity 1s";
-        const player = new Player(iframe);
-        let isPlaying = false;
+      const addEventListeners = this.addEventListeners;
 
+      if (isSwitch) {
+        let video = Wistia.api("hero_video");
+
+        let isPlaying = false;
         this.shape.children.forEach((item) => {
           item.position.y = item.position.y + 0.39;
         });
 
-        player
-          .ready()
-          .then(() => {
-            // player.getDuration().then((data) => console.log(data));
-
-            // get current time in seconds
-            player.on("timeupdate", (data) => {
-              if (data.seconds > 2.8) {
-                if (!isPlaying) {
-                  player.pause();
-                  iframe.style.opacity = 0;
-
-                  this.shape.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                      child.material.transparent = false;
-                      child.material.opacity = 1;
-                    }
-                  });
-
-                  this.action.paused = false;
-                  this.action.play();
-
-                  setTimeout(() => {
-                    this.addEventListeners();
-                  }, 4000);
-
-                  isPlaying = true;
+        video.bind("timechange", function (time) {
+          if (time > 2.8) {
+            if (!isPlaying) {
+              // video.pause();
+              video.remove();
+              shape.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                  child.material.transparent = false;
+                  child.material.opacity = 1;
                 }
-              }
+              });
+              action.paused = false;
+              action.play();
+              setTimeout(() => {
+                addEventListeners();
+              }, 2000);
+              isPlaying = true;
+            }
+          }
+        });
 
-              // console.log(data);
-            });
-          })
-          .catch((err) => console.log(err));
+        // const iframe = section
+        //   .closest(".shape_wrapper")
+        //   .querySelector("iframe");
+        // iframe.style.transition = "opacity 1s";
+        // const player = new Player(iframe);
+
+        // player
+        //   .ready()
+        //   .then(() => {
+        //     // player.getDuration().then((data) => console.log(data));
+        //     // get current time in seconds
+        //     player.on("timeupdate", (data) => {
+
+        //       // console.log(data);
+        //     });
+        //   })
+        //   .catch((err) => console.log(err));
       } else {
         this.addEventListeners();
 
