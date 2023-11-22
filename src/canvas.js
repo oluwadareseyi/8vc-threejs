@@ -83,6 +83,21 @@ export default class Canvas {
       const isSwitch = this.element.getAttribute("data-video-switch");
       const isReverse = section.getAttribute("data-reverse");
 
+      this.shape.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (emmisiveColor) {
+            child.material.emissive = new THREE.Color(emmisiveColor);
+          } else {
+            child.material.color = new THREE.Color(0xffffff);
+          }
+
+          if (isSwitch) {
+            child.material.transparent = true;
+            child.material.opacity = 0;
+          }
+        }
+      });
+
       if (isReverse) {
         section.addEventListener("click", () => {
           const delay = section.getAttribute("data-reverse-delay") || 0;
@@ -105,32 +120,53 @@ export default class Canvas {
 
       if (isSwitch) {
         let video = Wistia.api("hero_video");
+        // console.log(Wistia);
+        const percentWatched = video.percentWatched();
 
         let isPlaying = false;
         this.shape.children.forEach((item) => {
           item.position.y = item.position.y + 0.39;
         });
 
-        video.bind("timechange", function (time) {
-          if (time > 2.8) {
-            if (!isPlaying) {
-              // video.pause();
-              video.remove();
-              shape.traverse((child) => {
-                if (child instanceof THREE.Mesh) {
-                  child.material.transparent = false;
-                  child.material.opacity = 1;
-                }
-              });
-              action.paused = false;
-              action.play();
-              setTimeout(() => {
-                addEventListeners();
-              }, 2000);
-              isPlaying = true;
-            }
+        if (percentWatched === 1) {
+          if (!isPlaying) {
+            // video.pause();
+            video.remove();
+            this.shape.traverse((child) => {
+              if (child instanceof THREE.Mesh) {
+                child.material.transparent = false;
+                child.material.opacity = 1;
+              }
+            });
+            this.action.paused = false;
+            this.action.play();
+            setTimeout(() => {
+              addEventListeners();
+            }, 2000);
+            isPlaying = true;
           }
-        });
+        } else {
+          video?.bind("timechange", (time) => {
+            if (time > 2.8) {
+              if (!isPlaying) {
+                // video.pause();
+                video.remove();
+                this.shape.traverse((child) => {
+                  if (child instanceof THREE.Mesh) {
+                    child.material.transparent = false;
+                    child.material.opacity = 1;
+                  }
+                });
+                this.action.paused = false;
+                this.action.play();
+                setTimeout(() => {
+                  addEventListeners();
+                }, 2000);
+                isPlaying = true;
+              }
+            }
+          });
+        }
 
         // const iframe = section
         //   .closest(".shape_wrapper")
@@ -159,21 +195,6 @@ export default class Canvas {
           video.style.visibility = "hidden";
         }
       }
-
-      this.shape.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          if (emmisiveColor) {
-            child.material.emissive = new THREE.Color(emmisiveColor);
-          } else {
-            child.material.color = new THREE.Color(0xffffff);
-          }
-
-          if (isSwitch) {
-            child.material.transparent = true;
-            child.material.opacity = 0;
-          }
-        }
-      });
 
       this.scene.add(this.shape);
     });
