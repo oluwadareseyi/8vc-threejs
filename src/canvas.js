@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import AutoBind from "./bind";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 const THREE_PATH = `https://unpkg.com/three@0.${THREE.REVISION}.x`;
+import * as dat from "dat.gui";
 
 export default class Canvas {
   constructor(element, canvas) {
@@ -16,6 +17,13 @@ export default class Canvas {
     this.sizes = this.elementSize;
     this.sceneLoaded = false;
 
+    this.gui = new dat.GUI();
+    this.modelName = this.element.getAttribute("data-name");
+    this.guiControls = {
+      speed: Number(this.element.getAttribute("data-speed") || 0.015),
+    };
+    // console.log(this.element.getAttribute("data-speed"));
+
     this.dracoLoader = new DRACOLoader().setDecoderPath(
       `${THREE_PATH}/examples/jsm/libs/draco/gltf/`,
     );
@@ -27,6 +35,7 @@ export default class Canvas {
 
     this.createRenderer();
     this.loadAssets();
+    this.addSpeedGUI();
   }
 
   get elementSize() {
@@ -34,6 +43,20 @@ export default class Canvas {
       width: this.element.offsetWidth,
       height: this.element.offsetHeight,
     };
+  }
+
+  addSpeedGUI() {
+    this.gui
+      .add(this.guiControls, "speed")
+      .min(0.0001)
+      .max(0.04)
+      .step(0.0001)
+      .name(`${this.modelName} animation speed`)
+      .onFinishChange(() => {
+        this.action.reset();
+        this.action.setLoop(THREE.LoopOnce);
+        this.action.play();
+      });
   }
 
   createRenderer() {
@@ -273,9 +296,9 @@ export default class Canvas {
       const speed = this.element.getAttribute("data-speed");
 
       if (speed) {
-        this.mixer?.update(Number(speed));
+        this.mixer?.update(this.guiControls.speed);
       } else {
-        this.mixer?.update(0.015);
+        this.mixer?.update(this.guiControls.speed);
       }
 
       const parallaxX = -this.cursor.x * 0.8;
