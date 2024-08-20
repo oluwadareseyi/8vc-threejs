@@ -3,6 +3,8 @@ import Canvas from "./canvas";
 
 const sections = document.querySelectorAll("[data-three-section]");
 
+console.log(sections);
+
 let canvases = [];
 
 sections.forEach((section) => {
